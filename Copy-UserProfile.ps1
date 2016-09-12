@@ -42,8 +42,7 @@ to the local computer that the script is run from.
             try
             {
                 Write-Verbose 'Testing for the existence of a dual partitions'
-                Test-Path -Path "$RemoteUNC$Drive\Users\$ProfileName" `
-                          -ErrorAction Stop | Out-Null
+                Test-Path -Path "$RemoteUNC$Drive\Users\$ProfileName"  -ErrorAction Stop
             }
             catch
             {
@@ -52,9 +51,9 @@ to the local computer that the script is run from.
                 break
             }
         }
-
+        Write-Debug 'Test REMOTEUNC VARIABLE'
         
-        $Letters = @(65..90 | foreach {[char]$_})
+        $Letters = (65..90 | foreach {[char]$_})
         $Letters = $Letters | foreach {$_.ToString()}
             
         foreach ($Letter in $Letters)
@@ -64,18 +63,20 @@ to the local computer that the script is run from.
             {
                 try
                 {
+                    Write-Debug 'Try to create new PSDrive'
                     New-PSDrive -Name $Letter `
                                 -PSProvider FileSystem `
                                 -Root $RemoteUNC `
                                 -Scope Script `
                                 -Credential $Credential `
+                                -Persist `
                                 -ErrorAction Stop
                 }
                 catch
                 {
                     $Err = $_
                     Write-Warning $Err.Exception.Message
-                    continue
+                    
                 }
                 
                 $DL = $Letter.Insert(1,':\')
@@ -84,6 +85,7 @@ to the local computer that the script is run from.
             }
         }
         Write-Verbose 'Drive mapping succesfully created'
+        Write-Debug 'Drive Successfully Mapped'
     
         $Paths = @{
                         'Desktop'=$DL+"Desktop";
@@ -113,12 +115,16 @@ to the local computer that the script is run from.
     }
     PROCESS
     {
+        Write-Debug 'Pre Robocopy'
+        
         foreach ($Key in $Paths.Keys)
         {
             Robocopy $Paths[$Key] $($LocalProfile+$Paths[$Key].Split('\')[1]) /MIR /XA:SH /XJD /R:10 /W:2 /MT:32 /V /NP /LOG+:$($env:USERPROFILE)\Desktop\CopyUserProfile.txt
         }
+        Write-Debug 'Post Robocopy'
     }
     END
     {
         Write-Output 'Command ran successfully.'
+        Write-Output "Please view the logfile to verify data has been successfully transfered"
     }
