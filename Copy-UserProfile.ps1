@@ -43,7 +43,7 @@ to the local computer that the script is run from.
             {
                 Write-Verbose 'Testing for the existence of a dual partitions'
                 Test-Path -Path "$RemoteUNC$Drive\Users\$ProfileName"` 
-                          -ErrorAction Stop
+                          -ErrorAction Stop | Out-Null
             }
             catch
             {
