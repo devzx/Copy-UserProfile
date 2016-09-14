@@ -55,7 +55,8 @@ to the local computer that the script is run from.
         
         $Letters = (65..90 | foreach {[char]$_})
         $Letters = $Letters | foreach {$_.ToString()}
-            
+        
+        Write-Verbose 'Testing for existing mapped drives'
         foreach ($Letter in $Letters)
         {
             $PSDrive = Get-PSDrive
@@ -63,6 +64,7 @@ to the local computer that the script is run from.
             {
                 try
                 {
+                    Write-Verbose "Attempting to map $($Letter.Insert(1,':'))"
                     $DriveMap = New-PSDrive -Name $Letter `
                                             -PSProvider FileSystem `
                                             -Root $RemoteUNC `
@@ -76,9 +78,9 @@ to the local computer that the script is run from.
                     $Err = $_
                     Write-Warning $Err.Exception.Message
                 }
-                
                 if ($DriveMap.DisplayRoot -eq $RemoteUNC)
                 {
+                    Write-Verbose "$($Letter.Insert(1,':')) Drive mapped successfully"
                     $DL = $Letter.Insert(1,':\')
                     break
                 }
@@ -88,8 +90,6 @@ to the local computer that the script is run from.
                 Write-Output "$Letter drive found. Trying another letter"
             }
         }
-
-        Write-Verbose 'Drive mapping succesfully created'
     
         $Paths = @{
                         'Desktop'=$DL+"Desktop";
@@ -113,19 +113,20 @@ to the local computer that the script is run from.
             }
             else
             {
-                Write-Verbose "$Key folder found."
+                Write-Verbose "$Key folder found"
             }
         }
     }
     PROCESS
     {
+        Write-Verbose 'Starting ROBOCOPY'
         foreach ($Key in $Paths.Keys)
         {
-            Robocopy $Paths[$Key] $($LocalProfile+$Paths[$Key].Split('\')[1]) /MIR /XA:SH /XJD /R:10 /W:2 /MT:32 /V /NP /LOG+:$($env:USERPROFILE)\Desktop\CopyUserProfile.txt
+            Robocopy $Paths[$Key] $($LocalProfile+$Paths[$Key].Split('\')[1]) /MIR /XA:SH /XJD /R:10 /W:2 /MT:32 /V /NP /LOG+:$($LocalProfile)Desktop\CopyUserProfile.txt
         }
     }
     END
     {
-        Write-Output 'Command ran successfully.'
-        Write-Output "Please view the logfile to verify data has been successfully transfered"
+        Write-Output 'Command ran successfully'
+        Write-Warning 'Please view the logfile to verify all data has been successfully transfered'
     }
