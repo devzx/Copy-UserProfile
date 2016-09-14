@@ -63,25 +63,32 @@ to the local computer that the script is run from.
             {
                 try
                 {
-                    Write-Debug 'Try to create new PSDrive'
-                    New-PSDrive -Name $Letter `
-                                -PSProvider FileSystem `
-                                -Root $RemoteUNC `
-                                -Scope Script `
-                                -Credential $Credential `
-                                -Persist `
-                                -ErrorAction Stop
+                    $DriveMap = New-PSDrive -Name $Letter `
+                                            -PSProvider FileSystem `
+                                            -Root $RemoteUNC `
+                                            -Scope Script `
+                                            -Credential $Credential `
+                                            -Persist `
+                                            -ErrorAction Stop
                 }
                 catch
                 {
                     $Err = $_
-                    Write-Warning $Err.Exception.Message 
+                    Write-Warning $Err.Exception.Message
                 }
                 
-                $DL = $Letter.Insert(1,':\')
-                break
+                if ($DriveMap.DisplayRoot -eq $RemoteUNC)
+                {
+                    $DL = $Letter.Insert(1,':\')
+                    break
+                }
+            }
+            else
+            {
+                Write-Output "$Letter drive found. Trying another letter"
             }
         }
+
         Write-Verbose 'Drive mapping succesfully created'
     
         $Paths = @{
