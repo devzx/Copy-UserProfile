@@ -29,6 +29,7 @@ to the local computer that the script is run from.
 
     BEGIN
     {
+        $VerbosePreference = 'Continue'
         $UserName = Read-Host -Prompt 'Enter the local administrator username for the remote computer'
         $UserName = Join-Path $RemoteComputer -ChildPath $UserName
         $Password = Read-Host -Prompt 'Enter the local administrator password for the remote computer' -AsSecureString
@@ -62,7 +63,7 @@ to the local computer that the script is run from.
         foreach ($Letter in $Letters)
         {
             $PSDrive = Get-PSDrive
-            if ($PSDrive.Name -ne $Letter)
+            if (($PSDrive.Name -ne $Letter) -and ($PSDrive.DisplayRoot -ne $RemoteUNC))
             {
                 try
                 {
@@ -86,6 +87,12 @@ to the local computer that the script is run from.
                     $DL = $Letter.Insert(1,':\')
                     break
                 }
+            elseif ($PSDrive.DisplayRoot -eq $RemoteUNC)
+            {
+                Write-Verbose 'Drive already mapped'
+                $DL = $Letters.Insert(1,':\')
+                break
+            }
             }
             else
             {
@@ -120,9 +127,10 @@ to the local computer that the script is run from.
     }
     PROCESS
     {
-        Write-Verbose 'Starting ROBOCOPY'
+        Write-Host -ForegroundColor Green "`nStarting ROBOCOPY"
         foreach ($Key in $Paths.Keys)
         {
+            Write-Host -ForegroundColor Red "Copying $Key"
             Robocopy $Paths[$Key] $($LocalProfile+$Paths[$Key].Split('\')[1]) /MIR /XA:SH /XJD /R:10 /W:2 /MT:32 /V /NP /LOG+:$($LocalProfile)Desktop\CopyUserProfile.txt
         }
     }
