@@ -18,10 +18,12 @@ to the local computer that the script is run from.
         [Parameter(Mandatory=$true,
                    HelpMessage='Enter the name or IP address of the users current machine')]
         [ValidateScript({Test-Connection $_ -Quiet -Count 1})]
+        [ValidateNotNullOrEmpty()]
         [string]$RemoteComputer,
 
         [Parameter(Mandatory=$true,
                    HelpMessage='Enter the users LL username')]
+        [ValidateNotNullOrEmpty()]
         [string]$ProfileName
     )
 
@@ -42,7 +44,7 @@ to the local computer that the script is run from.
             try
             {
                 Write-Verbose 'Testing for the existence of a dual partitions'
-                Test-Path -Path "$RemoteUNC$Drive\Users\$ProfileName"` 
+                Test-Path -Path "$RemoteUNC$Drive\Users\$ProfileName" `
                           -ErrorAction Stop | Out-Null
             }
             catch
@@ -100,8 +102,7 @@ to the local computer that the script is run from.
                         'Music'=$DL+"Music";
                         'Pictures'=$DL+"Pictures";
                         'Videos'=$DL+"Videos";
-                        'StickyNotes'=$DL+"AppData\Roaming\Microsoft\Sticky Notes"
-                    }
+                  }
 
         foreach ($Key in $($Paths.Keys))
         {
@@ -127,6 +128,6 @@ to the local computer that the script is run from.
     }
     END
     {
-        Write-Output 'Command ran successfully'
+        Write-Host -ForegroundColor Green 'Command ran successfully'
         Write-Warning 'Please view the logfile to verify all data has been successfully transfered'
     }
